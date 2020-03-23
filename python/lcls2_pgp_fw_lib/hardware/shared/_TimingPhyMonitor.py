@@ -11,24 +11,21 @@ import pyrogue as pr
 
 class TimingPhyMonitor(pr.Device):
     def __init__(   self,       
-            name        = "TimingPhyMonitor",
             description = "Timing Debug Monitor Module",
             numLanes     = 4,
             **kwargs):
-        super().__init__(name=name, description=description, **kwargs)
+        super().__init__(description=description, **kwargs)
         
         self.add(pr.RemoteCommand(  
             name         = "MmcmRst",
-            description  = "MmcmRst",
             offset       = 0x00,
             bitSize      = 1,
             bitOffset    = 0,
-            function     = pr.BaseCommand.createTouch(0x1),
+            function     = pr.BaseCommand.touchOne,
         ))          
         
         self.add(pr.RemoteVariable( 
             name         = "MmcmLocked",
-            description  = "MmcmLocked",
             offset       = 0x04,
             bitSize      = 2,
             bitOffset    = 0,
@@ -39,7 +36,6 @@ class TimingPhyMonitor(pr.Device):
 
         self.add(pr.RemoteVariable( 
             name         = "RefRstStatus",
-            description  = "RefRstStatus",
             offset       = 0x08,
             bitSize      = 2,
             bitOffset    = 0,
@@ -76,25 +72,39 @@ class TimingPhyMonitor(pr.Device):
         
         self.add(pr.RemoteCommand(  
             name         = "RxUserRst",
-            description  = "RxUserRst",
             offset       = 0x14,
             bitSize      = 1,
             bitOffset    = 0,
-            function     = pr.BaseCommand.createTouch(0x1),
+            function     = pr.BaseCommand.touchOne,
         ))   
         
         self.add(pr.RemoteCommand(  
             name         = "TxUserRst",
-            description  = "TxUserRst",
             offset       = 0x18,
             bitSize      = 1,
             bitOffset    = 0,
-            function     = pr.BaseCommand.createTouch(0x1),
-        ))                  
+            function     = pr.BaseCommand.touchOne,
+        ))
+        
+        self.add(pr.RemoteCommand(  
+            name         = "TxPhyReset",
+            offset       = 0x18,
+            bitSize      = 1,
+            bitOffset    = 1,
+            function     = pr.BaseCommand.touchOne,
+        ))
+        
+        self.add(pr.RemoteCommand(  
+            name         = "TxPhyPllReset",
+            offset       = 0x18,
+            bitSize      = 1,
+            bitOffset    = 2,
+            function     = pr.BaseCommand.touchOne,
+        ))
+
         
         self.add(pr.RemoteVariable( 
             name         = "TxRstStatus",
-            description  = "TxRstStatus",
             offset       = 0x20,
             bitSize      = 1,
             bitOffset    = 0,
@@ -105,7 +115,6 @@ class TimingPhyMonitor(pr.Device):
 
         self.add(pr.RemoteVariable( 
             name         = "RxRstStatus",
-            description  = "RxRstStatus",
             offset       = 0x24,
             bitSize      = 1,
             bitOffset    = 0,
@@ -116,7 +125,6 @@ class TimingPhyMonitor(pr.Device):
         
         self.addRemoteVariables(   
             name         = "RefClkFreq",
-            description  = "RefClkFreq",
             offset       =  0x30,
             bitSize      = 32,
             bitOffset    = 0,
@@ -130,7 +138,6 @@ class TimingPhyMonitor(pr.Device):
         
         self.add(pr.RemoteVariable( 
             name         = "TxClkFreq",
-            description  = "TxClkFreq",
             offset       = 0x38,
             bitSize      = 32,
             bitOffset    = 0,
@@ -142,7 +149,6 @@ class TimingPhyMonitor(pr.Device):
         
         self.add(pr.RemoteVariable( 
             name         = "RxClkFreq",
-            description  = "RxClkFreq",
             offset       = 0x3C,
             bitSize      = 32,
             bitOffset    = 0,
@@ -154,7 +160,6 @@ class TimingPhyMonitor(pr.Device):
         
         self.addRemoteVariables(   
             name         = "LocalTrigRate",
-            description  = "Local Trig Rate",
             offset       =  0x40,
             bitSize      = 32,
             bitOffset    = 0,
@@ -168,7 +173,6 @@ class TimingPhyMonitor(pr.Device):
 
         self.addRemoteVariables(   
             name         = "RemoteTrigRate",
-            description  = "Remote Trig Rate",
             offset       =  0x50,
             bitSize      = 32,
             bitOffset    = 0,
@@ -183,7 +187,6 @@ class TimingPhyMonitor(pr.Device):
 
         self.addRemoteVariables(   
             name         = "LocalTrigDropRate",
-            description  = "Local Trig Drop Rate",
             offset       =  0x60,
             bitSize      = 32,
             bitOffset    = 0,
@@ -197,7 +200,6 @@ class TimingPhyMonitor(pr.Device):
 
         self.addRemoteVariables(   
             name         = "RemoteTrigDropRate",
-            description  = "Remote Trig Drop Rate",
             offset       =  0x70,
             bitSize      = 32,
             bitOffset    = 0,
@@ -211,7 +213,6 @@ class TimingPhyMonitor(pr.Device):
         
         self.addRemoteVariables(   
             name         = "LocalTrigCnt",
-            description  = "Local Trig Cnt",
             offset       =  0x80,
             bitSize      = 16,
             bitOffset    = 0,
@@ -224,7 +225,6 @@ class TimingPhyMonitor(pr.Device):
         
         self.addRemoteVariables(   
             name         = "RemoteTrigCnt",
-            description  = "Remote Trig Cnt",
             offset       =  0x88,
             bitSize      = 16,
             bitOffset    = 0,
@@ -237,7 +237,6 @@ class TimingPhyMonitor(pr.Device):
 
         self.addRemoteVariables(   
             name         = "LocalTrigDropCnt",
-            description  = "Local Trig Drop Cnt",
             offset       =  0x90,
             bitSize      = 16,
             bitOffset    = 0,
@@ -250,7 +249,6 @@ class TimingPhyMonitor(pr.Device):
         
         self.addRemoteVariables(   
             name         = "RemoteTrigDropCnt",
-            description  = "Remote Trig Drop Cnt",
             offset       =  0x98,
             bitSize      = 16,
             bitOffset    = 0,

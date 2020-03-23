@@ -134,32 +134,35 @@ architecture mapping of Kcu1500TimingRx is
    signal useMiniTpg   : sl;
    signal loopback     : slv(2 downto 0);
 
-   signal rxUserRst      : sl;
-   signal gtRxOutClk     : slv(1 downto 0);
-   signal gtRxClk        : slv(1 downto 0);
-   signal timingRxClk    : sl;
-   signal timingRxRst    : sl;
-   signal timingRxRstTmp : sl;
-   signal gtRxData       : Slv16Array(1 downto 0);
-   signal rxData         : slv(15 downto 0);
-   signal gtRxDataK      : Slv2Array(1 downto 0);
-   signal rxDataK        : slv(1 downto 0);
-   signal gtRxDispErr    : Slv2Array(1 downto 0);
-   signal rxDispErr      : slv(1 downto 0);
-   signal gtRxDecErr     : Slv2Array(1 downto 0);
-   signal rxDecErr       : slv(1 downto 0);
-   signal gtRxStatus     : TimingPhyStatusArray(1 downto 0);
-   signal rxStatus       : TimingPhyStatusType;
-   signal rxCtrl         : TimingPhyControlType;
-   signal rxControl      : TimingPhyControlType;
+   signal rxUserRst       : sl;
+   signal gtRxOutClk      : slv(1 downto 0);
+   signal gtRxClk         : slv(1 downto 0);
+   signal timingRxClk     : sl;
+   signal timingRxRst     : sl;
+   signal timingRxRstTmp  : sl;
+   signal gtRxData        : Slv16Array(1 downto 0);
+   signal rxData          : slv(15 downto 0);
+   signal gtRxDataK       : Slv2Array(1 downto 0);
+   signal rxDataK         : slv(1 downto 0);
+   signal gtRxDispErr     : Slv2Array(1 downto 0);
+   signal rxDispErr       : slv(1 downto 0);
+   signal gtRxDecErr      : Slv2Array(1 downto 0);
+   signal rxDecErr        : slv(1 downto 0);
+   signal gtRxStatus      : TimingPhyStatusArray(1 downto 0);
+   signal rxStatus        : TimingPhyStatusType;
+   signal timingRxControl : TimingPhyControlType;
+   signal gtRxControl     : TimingPhyControlType;
 
-   signal txUserRst   : sl;
-   signal gtTxOutClk  : slv(1 downto 0);
-   signal gtTxClk     : slv(1 downto 0);
-   signal timingTxClk : sl;
-   signal timingTxRst : sl;
+   signal txUserRst     : sl;
+   signal gtTxOutClk    : slv(1 downto 0);
+   signal gtTxClk       : slv(1 downto 0);
+   signal timingTxClk   : sl;
+   signal timingTxRst   : sl;
 --   signal txStatus   : TimingPhyStatusType := TIMING_PHY_STATUS_FORCE_C;
-   signal gtTxStatus  : TimingPhyStatusArray(1 downto 0);
+   signal gtTxStatus    : TimingPhyStatusArray(1 downto 0);
+   signal gtTxControl   : TimingPhyControlType;
+   signal txPhyReset    : sl;
+   signal txPhyPllReset : sl;
 
    signal tpgMiniTimingPhy : TimingPhyType;
    signal xpmMiniTimingPhy : TimingPhyType;
@@ -346,7 +349,7 @@ begin
                gtTxP           => timingTxP(i),
                gtTxN           => timingTxN(i),
                -- Rx ports
-               rxControl       => rxControl,
+               rxControl       => gtRxControl,
                rxStatus        => gtRxStatus(i),
                rxUsrClkActive  => mmcmLocked(i),
                rxUsrClk        => timingRxClk,
@@ -356,7 +359,7 @@ begin
                rxDecErr        => gtRxDecErr(i),
                rxOutClk        => gtRxOutClk(i),
                -- Tx Ports
-               txControl       => temTimingTxPhy.control,
+               txControl       => gtTxControl,  --temTimingTxPhy.control,
                txStatus        => gtTxStatus(i),
                txUsrClk        => gtTxOutClk(i),
                txUsrClkActive  => mmcmLocked(i),
@@ -438,13 +441,17 @@ begin
    -----------------------
    -- Insert user RX reset
    -----------------------
-   rxControl.reset       <= rxCtrl.reset or rxUserRst;
-   rxControl.inhibit     <= rxCtrl.inhibit;
-   rxControl.polarity    <= rxCtrl.polarity;
-   rxControl.bufferByRst <= rxCtrl.bufferByRst;
-   rxControl.pllReset    <= rxCtrl.pllReset or rxUserRst;
+   gtRxControl.reset       <= timingRxControl.reset or rxUserRst;
+   gtRxControl.inhibit     <= timingRxControl.inhibit;
+   gtRxControl.polarity    <= timingRxControl.polarity;
+   gtRxControl.bufferByRst <= timingRxControl.bufferByRst;
+   gtRxControl.pllReset    <= timingRxControl.pllReset or rxUserRst;
 
-
+   gtTxControl.reset       <= temTimingTxPhy.control.reset or txPhyReset;
+   gtTxControl.pllReset    <= temTimingTxPhy.control.pllReset or txPhyPllReset;
+   gtTxControl.inhibit     <= temTimingTxPhy.control.inhibit;
+   gtTxControl.polarity    <= temTimingTxPhy.control.polarity;
+   gtTxControl.bufferByRst <= temTimingTxPhy.control.bufferByRst;
 
    --------------
    -- Timing Core
@@ -466,7 +473,7 @@ begin
          gtRxDataK        => rxDataK,
          gtRxDispErr      => rxDispErr,
          gtRxDecErr       => rxDecErr,
-         gtRxControl      => rxCtrl,
+         gtRxControl      => timingRxControl,
          gtRxStatus       => rxStatus,
          tpgMiniTimingPhy => tpgMiniTimingPhy,
          timingClkSel     => timingClkSel,
@@ -525,6 +532,8 @@ begin
       port map (
          rxUserRst       => rxUserRst,
          txUserRst       => txUserRst,
+         txPhyReset      => txPhyReset,
+         txPhyPllReset   => txPhyPllReset,
          useMiniTpg      => useMiniTpg,
          mmcmRst         => mmcmRst,
          loopback        => loopback,

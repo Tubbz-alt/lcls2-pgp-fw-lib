@@ -29,6 +29,8 @@ entity TimingPhyMonitor is
    port (
       rxUserRst       : out sl;
       txUserRst       : out sl;
+      txPhyReset      : out sl;
+      txPhyPllReset   : out sl;
       useMiniTpg      : out Sl;
       mmcmRst         : out sl;
       loopback        : out slv(2 downto 0);
@@ -64,6 +66,8 @@ architecture rtl of TimingPhyMonitor is
       mmcmRst        : sl;
       rxUserRst      : sl;
       txUserRst      : sl;
+      txPhyReset     : sl;
+      txPhyPllReset  : sl;
       useMiniTpg     : sl;
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
@@ -79,6 +83,8 @@ architecture rtl of TimingPhyMonitor is
       mmcmRst        => '0',
       rxUserRst      => '0',
       txUserRst      => '0',
+      txPhyReset     => '0',
+      txPhyPllReset  => '0',
       useMiniTpg     => '0',
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
@@ -247,6 +253,9 @@ begin
       v.mmcmRst   := '0';
       v.cntRst    := '0';
 
+      v.txPhyReset    := '0';
+      v.txPhyPllReset := '0';
+
       -- Check for counter reset
       if (r.cntRst = '1') then
          v.locTrigCnt     := (others => (others => '0'));
@@ -283,6 +292,8 @@ begin
       axiSlaveRegister (regCon, x"10", 0, v.useMiniTpg);
       axiSlaveRegister (regCon, x"14", 0, v.rxUserRst);
       axiSlaveRegister (regCon, x"18", 0, v.txUserRst);
+      axiSlaveRegister (regCon, X"18", 1, v.txPhyReset);
+      axiSlaveRegister (regCon, X"18", 2, v.txPhyPllReset);
 
       axiSlaveRegisterR(regCon, x"20", 0, txReset);
       axiSlaveRegisterR(regCon, x"24", 0, rxReset);
@@ -342,6 +353,9 @@ begin
       axilReadSlave  <= r.axilReadSlave;
       useMiniTpg     <= r.useMiniTpg;
       loopback       <= r.loopback;
+
+      txPhyPllReset <= r.txPhyPllReset;
+      txPhyReset    <= r.txPhyReset;
 
       -- Reset
       if (axilRst = '1') then
