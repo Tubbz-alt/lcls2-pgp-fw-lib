@@ -9,8 +9,13 @@
 #-----------------------------------------------------------------------------
 
 from lcls2_pgp_fw_lib.hardware.shared import TimingRx
+import lcls2_pgp_fw_lib.hardware.XilinxKcu1500
         
 class Kcu1500TimingRx(TimingRx): 
     def __init__(self, numLanes = 4, **kwargs):
         super().__init__(numLanes=numLanes, dualGTH=True, **kwargs)
+
+        self.add(lcls2_pgp_fw_lib.hardware.XilinxKcu1500.Kcu1500I2cProxy(
+            offset = 0x50000))
+            
         

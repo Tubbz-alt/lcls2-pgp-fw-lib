@@ -186,3 +186,5 @@ set_clock_groups -asynchronous \
 #     -group [get_clocks {clk371}] \
 #     -group [get_clocks {dmaClk}]
 
+set_property -dict { PACKAGE_PIN AN24 IOSTANDARD LVCMOS18 } [get_ports {scl}]
+set_property -dict { PACKAGE_PIN AP24 IOSTANDARD LVCMOS18 } [get_ports {sda}]

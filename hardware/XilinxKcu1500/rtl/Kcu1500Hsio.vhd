@@ -101,19 +101,23 @@ entity Kcu1500Hsio is
       --  Kcu1500Hsio Ports
       ---------------------    
       -- QSFP[0] Ports
-      qsfp0RefClkP : in  slv(1 downto 0) := (others => '0');
-      qsfp0RefClkN : in  slv(1 downto 0) := (others => '0');
-      qsfp0RxP     : in  slv(3 downto 0) := (others => '0');
-      qsfp0RxN     : in  slv(3 downto 0) := (others => '0');
-      qsfp0TxP     : out slv(3 downto 0) := (others => '0');
-      qsfp0TxN     : out slv(3 downto 0) := (others => '0');
+      qsfp0RefClkP : in    slv(1 downto 0) := (others => '0');
+      qsfp0RefClkN : in    slv(1 downto 0) := (others => '0');
+      qsfp0RxP     : in    slv(3 downto 0) := (others => '0');
+      qsfp0RxN     : in    slv(3 downto 0) := (others => '0');
+      qsfp0TxP     : out   slv(3 downto 0) := (others => '0');
+      qsfp0TxN     : out   slv(3 downto 0) := (others => '0');
       -- QSFP[1] Ports
-      qsfp1RefClkP : in  slv(1 downto 0) := (others => '0');
-      qsfp1RefClkN : in  slv(1 downto 0) := (others => '0');
-      qsfp1RxP     : in  slv(3 downto 0) := (others => '0');
-      qsfp1RxN     : in  slv(3 downto 0) := (others => '0');
-      qsfp1TxP     : out slv(3 downto 0) := (others => '0');
-      qsfp1TxN     : out slv(3 downto 0) := (others => '0'));
+      qsfp1RefClkP : in    slv(1 downto 0) := (others => '0');
+      qsfp1RefClkN : in    slv(1 downto 0) := (others => '0');
+      qsfp1RxP     : in    slv(3 downto 0) := (others => '0');
+      qsfp1RxN     : in    slv(3 downto 0) := (others => '0');
+      qsfp1TxP     : out   slv(3 downto 0) := (others => '0');
+      qsfp1TxN     : out   slv(3 downto 0) := (others => '0');
+      -- QSFP I2C
+      scl          : inout sl;
+      sda          : inout sl);
+
 end Kcu1500Hsio;
 
 architecture mapping of Kcu1500Hsio is
@@ -377,7 +381,10 @@ begin
          timingRxP           => qsfp1RxP(1 downto 0),
          timingRxN           => qsfp1RxN(1 downto 0),
          timingTxP           => qsfp1TxP(1 downto 0),
-         timingTxN           => qsfp1TxN(1 downto 0));
+         timingTxN           => qsfp1TxN(1 downto 0),
+         scl                 => scl,
+         sda                 => sda);
+
 
    -- Feed l0 triggers directly to PGP
    TRIGGER_GEN : for i in NUM_PGP_LANES_G-1 downto 0 generate
@@ -392,7 +399,6 @@ begin
          clk   => triggerClk,           -- [in]
          sig_i => remoteTriggersComb,   -- [in]
          reg_o => remoteTriggers);      -- [out]
-
 
    triggerData <= iTriggerData;
 

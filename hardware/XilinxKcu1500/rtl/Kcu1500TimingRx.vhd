@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : Kcu1500TimingRx.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- This file is part of LCLS2 PGP Firmware Library'.
@@ -53,35 +52,38 @@ entity Kcu1500TimingRx is
       triggerData : out TriggerEventDataArray(NUM_DETECTORS_G-1 downto 0);
 
       -- L1 trigger feedback (optional)
-      l1Clk               : in  sl                                                 := '0';
-      l1Rst               : in  sl                                                 := '0';
-      l1Feedbacks         : in  TriggerL1FeedbackArray(NUM_DETECTORS_G-1 downto 0) := (others => TRIGGER_L1_FEEDBACK_INIT_C);
-      l1Acks              : out slv(NUM_DETECTORS_G-1 downto 0);
+      l1Clk               : in    sl                                                 := '0';
+      l1Rst               : in    sl                                                 := '0';
+      l1Feedbacks         : in    TriggerL1FeedbackArray(NUM_DETECTORS_G-1 downto 0) := (others => TRIGGER_L1_FEEDBACK_INIT_C);
+      l1Acks              : out   slv(NUM_DETECTORS_G-1 downto 0);
       -- Event streams
-      eventClk            : in  sl;
-      eventRst            : in  sl;
-      eventTimingMessages : out TimingMessageArray(NUM_DETECTORS_G-1 downto 0)     := (others => TIMING_MESSAGE_INIT_C);
-      eventAxisMasters    : out AxiStreamMasterArray(NUM_DETECTORS_G-1 downto 0);
-      eventAxisSlaves     : in  AxiStreamSlaveArray(NUM_DETECTORS_G-1 downto 0);
-      eventAxisCtrl       : in  AxiStreamCtrlArray(NUM_DETECTORS_G-1 downto 0);
-      clearReadout        : out slv(NUM_DETECTORS_G-1 downto 0)                    := (others => '0');
+      eventClk            : in    sl;
+      eventRst            : in    sl;
+      eventTimingMessages : out   TimingMessageArray(NUM_DETECTORS_G-1 downto 0)     := (others => TIMING_MESSAGE_INIT_C);
+      eventAxisMasters    : out   AxiStreamMasterArray(NUM_DETECTORS_G-1 downto 0);
+      eventAxisSlaves     : in    AxiStreamSlaveArray(NUM_DETECTORS_G-1 downto 0);
+      eventAxisCtrl       : in    AxiStreamCtrlArray(NUM_DETECTORS_G-1 downto 0);
+      clearReadout        : out   slv(NUM_DETECTORS_G-1 downto 0)                    := (others => '0');
       -- AXI-Lite Interface
-      axilClk             : in  sl;
-      axilRst             : in  sl;
-      axilReadMaster      : in  AxiLiteReadMasterType;
-      axilReadSlave       : out AxiLiteReadSlaveType;
-      axilWriteMaster     : in  AxiLiteWriteMasterType;
-      axilWriteSlave      : out AxiLiteWriteSlaveType;
+      axilClk             : in    sl;
+      axilRst             : in    sl;
+      axilReadMaster      : in    AxiLiteReadMasterType;
+      axilReadSlave       : out   AxiLiteReadSlaveType;
+      axilWriteMaster     : in    AxiLiteWriteMasterType;
+      axilWriteSlave      : out   AxiLiteWriteSlaveType;
       -- GT Serial Ports
-      timingRxP           : in  slv(1 downto 0);
-      timingRxN           : in  slv(1 downto 0);
-      timingTxP           : out slv(1 downto 0);
-      timingTxN           : out slv(1 downto 0));
+      timingRxP           : in    slv(1 downto 0);
+      timingRxN           : in    slv(1 downto 0);
+      timingTxP           : out   slv(1 downto 0);
+      timingTxN           : out   slv(1 downto 0);
+      -- QSFP I2C
+      scl                 : inout sl;
+      sda                 : inout sl);
 end Kcu1500TimingRx;
 
 architecture mapping of Kcu1500TimingRx is
 
-   constant NUM_AXIL_MASTERS_C : positive := 6;
+   constant NUM_AXIL_MASTERS_C : positive := 7;
 
    constant RX_PHY0_INDEX_C  : natural := 0;
    constant RX_PHY1_INDEX_C  : natural := 1;
@@ -89,6 +91,7 @@ architecture mapping of Kcu1500TimingRx is
    constant TIMING_INDEX_C   : natural := 3;
    constant XPM_MINI_INDEX_C : natural := 4;
    constant TEM_INDEX_C      : natural := 5;
+   constant I2C_INDEX_C      : natural := 6;
 
    constant AXIL_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := (
       RX_PHY0_INDEX_C  => (
@@ -114,7 +117,11 @@ architecture mapping of Kcu1500TimingRx is
       TIMING_INDEX_C   => (
          baseAddr      => (AXI_BASE_ADDR_G+x"0008_0000"),
          addrBits      => 18,
-         connectivity  => x"FFFF"));
+         connectivity  => x"FFFF"),
+      I2C_INDEX_C      => (
+         baseAddr      => (AXI_BASE_ADDR_G + X"0005_0000"),
+         addrBits      => 12,
+         connectivity  => X"FFFF"));
 
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0);
@@ -609,5 +616,21 @@ begin
          axilReadSlave       => axilReadSlaves(TEM_INDEX_C),    -- [out]
          axilWriteMaster     => axilWriteMasters(TEM_INDEX_C),  -- [in]
          axilWriteSlave      => axilWriteSlaves(TEM_INDEX_C));  -- [out]
+
+   U_Kcu1500I2c_1 : entity work.Kcu1500I2c
+      generic map (
+         TPD_G          => TPD_G,
+--         I2C_SCL_FREQ_G  => I2C_SCL_FREQ_G,
+--         I2C_MIN_PULSE_G => I2C_MIN_PULSE_G,
+         AXI_CLK_FREQ_G => AXIL_CLK_FREQ_G)
+      port map (
+         scl             => scl,                            -- [inout]
+         sda             => sda,                            -- [inout]
+         axilClk         => axilClk,                        -- [in]
+         axilRst         => axilRst,                        -- [in]
+         axilReadMaster  => axilReadMasters(I2C_INDEX_C),   -- [in]
+         axilReadSlave   => axilReadSlaves(I2C_INDEX_C),    -- [out]
+         axilWriteMaster => AxilWriteMasters(I2C_INDEX_C),  -- [in]
+         axilWriteSlave  => axilWriteSlaves(I2C_INDEX_C));  -- [out]
 
 end mapping;
